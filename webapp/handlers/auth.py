@@ -64,7 +64,7 @@ class TokenAuthHandler(BaseHandler):
         pubkey = nacl.signing.VerifyKey(user_dct['pubkey_hex'],
                                         encoder=nacl.encoding.HexEncoder)
         try:
-            verifier = pubkey.verify(tokens_dct['verifier'])
+            verifier = pubkey.verify(tokens_dct['verifier'].encode())
         except nacl.exceptions.BadSignatureError:
             self.current_user = None
             return
