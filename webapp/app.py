@@ -6,19 +6,19 @@ import nacl.utils
 import tornado.web
 from motor import MotorClient
 
+from .handlers import (SignupHandler, TokenGetHandler, TokenRefreshHandler,
+                       TestApiHandler)
+
 
 class Application(tornado.web.Application):
 
     def __init__(self):
 
         handlers = [
-#            (r'/', HomeHandler),
-#            (r'/register', RegistrationHandler),
-#            (r'/login', LoginHandler),
-#            (r'/logout', LogoutHandler),
-#            (r'/profile', ProfileHandler),
-#            (r'/cpanel', CPanelHandler),
-#            (r'/rpmbuild', RPMBuildHandler),
+            (r'/api/signup', SignupHandler),
+            (r'/api/token/get', TokenGetHandler),
+            (r'/api/token/refresh', TokenRefreshHandler),
+            (r'/api/test', TestApiHandler),
         ]
 
         settings = dict(
