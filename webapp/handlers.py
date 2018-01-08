@@ -112,7 +112,7 @@ class TokenGetHandler(TokenBaseHandler):
             self.set_status(403)
             self.finish()
 
-        user_tokens = self.generate_token(username)
+        user_tokens = yield self.generate_token(username)
         self.write(**user_tokens)
 
 
@@ -134,11 +134,11 @@ class TokenRefreshHandler(TokenBaseHandler):
             'access_tokens.selector': {'$eq': tokens_dct['selector']},
             'access_tokens.verifier': {'$eq': verifier_hash},
         }
-        user_dct = self.db.users.find_one(query)
+        user_dct = yield self.db.users.find_one(query)
 
         if user_dct is None:
             self.set_status(403)
             self.finish()
 
-        user_tokens = self.generate_token(user_dct['username'])
+        user_tokens = yield self.generate_token(user_dct['username'])
         self.write(**user_tokens)
