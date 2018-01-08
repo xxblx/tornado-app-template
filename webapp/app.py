@@ -6,8 +6,9 @@ import nacl.utils
 import tornado.web
 from motor import MotorClient
 
-from .handlers import (SignupHandler, TokenGetHandler, TokenRefreshHandler,
-                       TestApiHandler)
+from .handlers.auth import SignupHandler
+from .handlers.testapi import TestApiHandler
+from .handlers.tokens import TokenGetHandler, TokenRenewHandler
 
 
 class Application(tornado.web.Application):
@@ -17,19 +18,19 @@ class Application(tornado.web.Application):
         handlers = [
             (r'/api/signup', SignupHandler),
             (r'/api/token/get', TokenGetHandler),
-            (r'/api/token/refresh', TokenRefreshHandler),
-            (r'/api/test', TestApiHandler),
+            (r'/api/token/renew', TokenRenewHandler),
+            (r'/api/test', TestApiHandler)
         ]
 
         settings = dict(
             login_url='/login',
-            debug=True,
+            debug=True
         )
 
         super(Application, self).__init__(handlers, **settings)
 
         # MongoDB
-        self.db = MotorClient('127.0.0.1')['tornado-pynacl-tokens']
+        self.db = MotorClient('127.0.0.1')['tornado-token-auth']
 
         # ThreadPoolExecutor for long tasks like password hashing
         self.executor = ThreadPoolExecutor(32)
