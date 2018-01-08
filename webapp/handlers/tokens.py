@@ -25,7 +25,7 @@ class TokenBaseHandler(BaseHandler):
         # Selector stores as is in db, but verifier stores as hash
         selector = uuid4().hex
         verifier = uuid4().hex
-        verifier_hash = nacl.hash.blake2b(verifier, key=self.hmac_key,
+        verifier_hash = nacl.hash.blake2b(verifier.encode(), key=self.hmac_key,
                                           encoder=nacl.encoding.HexEncoder)
         expires_in = datetime.now() + timedelta(hours=2)
         expires_in = mktime(expires_in.utctimetuple())
@@ -89,7 +89,7 @@ class TokenRenewHandler(TokenBaseHandler):
         refresh_token = self.get_argument('refresh_token')
 
         tokens_dct = json.loads(base64.decodebytes(access_token).decode())
-        verifier_hash = nacl.hash.blake2b(tokens_dct['verifier'],
+        verifier_hash = nacl.hash.blake2b(tokens_dct['verifier'].encode(),
                                           key=self.hmac_key,
                                           encoder=nacl.encoding.HexEncoder)
 

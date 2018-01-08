@@ -29,7 +29,7 @@ class TokenAuthHandler(BaseHandler):
         access_token = self.get_argument('access_token')
 
         tokens_dct = json.loads(base64.decodebytes(access_token).decode())
-        verifier_hash = nacl.hash.blake2b(tokens_dct['verifier'],
+        verifier_hash = nacl.hash.blake2b(tokens_dct['verifier'].encode(),
                                           key=self.hmac_key,
                                           encoder=nacl.encoding.HexEncoder)
 
