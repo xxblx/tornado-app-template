@@ -57,8 +57,14 @@ class SignupHandler(BaseHandler):
         username = self.get_argument('username')
         password = self.get_argument('password')
 
+        # Check - does user already have account?
+        user_dct = yield self.db.users.find_one({'username': username})
+        if user_dct is None:
+            self.set_status(403)
+            self.finish()
+            return
+
         # TODO: save user's public key for signature checking
-        # TODO: check - does user already have account?
 
         password_hash = yield self.executor.submit(
             nacl.pwhash.str,

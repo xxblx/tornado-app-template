@@ -64,6 +64,7 @@ class TokenGetHandler(TokenBaseHandler):
         if user_dct is None:
             self.set_status(403)
             self.finish()
+            return
 
         password_check = yield self.executor.submit(
             nacl.pwhash.verify,
@@ -74,6 +75,7 @@ class TokenGetHandler(TokenBaseHandler):
         if not password_check:
             self.set_status(403)
             self.finish()
+            return
 
         user_tokens = yield self.generate_token(username)
         self.write(**user_tokens)
@@ -102,6 +104,7 @@ class TokenRenewHandler(TokenBaseHandler):
         if user_dct is None:
             self.set_status(403)
             self.finish()
+            return
 
         user_tokens = yield self.generate_token(user_dct['username'])
         self.write(**user_tokens)
