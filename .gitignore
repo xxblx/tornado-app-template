@@ -1,0 +1,5 @@
+text
+VENV
+**/__pycache__
+**/*.pyc
+.spyproject 
