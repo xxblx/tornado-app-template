@@ -4,6 +4,7 @@ import json
 import base64
 from time import mktime
 from datetime import datetime
+from hmac import compare_digest
 
 import nacl.hash
 import nacl.pwhash
@@ -29,7 +30,9 @@ class TokenAuthHandler(BaseHandler):
     def prepare(self):
         now = mktime(datetime.now().utctimetuple())
         access_token = self.get_argument('access_token')
-        tokens_dct = json.loads(base64.decodebytes(access_token).decode())
+        tokens_dct = json.loads(
+            base64.decodebytes(tornado.escape.utf8(access_token)).decode()
+        )
 
         # Get user's data from db
         user_dct = yield self.db.users.aggregate([
@@ -74,7 +77,7 @@ class TokenAuthHandler(BaseHandler):
                                           key=self.hmac_key,
                                           encoder=nacl.encoding.HexEncoder)
 
-        if verifier_hash != user_dct['verifier']:
+        if not compare_digest(verifier_hash, user_dct['verifier']):
             self.current_user = None
             return
 
@@ -108,7 +111,7 @@ class SignupHandler(BaseHandler):
         user_dct = {
             'username': username,
             'password_hash': password_hash,
-            'pubkey_hex': pubkey_hex
+            'pubkey_hex': tornado.escape.utf8(pubkey_hex)
         }
         yield self.db.users.insert(user_dct)
         self.set_status(200)

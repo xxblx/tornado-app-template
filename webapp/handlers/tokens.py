@@ -45,7 +45,7 @@ class TokenBaseHandler(BaseHandler):
                                    {'$push': {'access_tokens': tokens_dct_db}})
 
         user_tokens = {
-            'access_token': access_token,
+            'access_token': access_token.decode(),
             'refresh_token': refresh_token,
             'expires_in': expires_in
         }
@@ -88,7 +88,9 @@ class TokenRenewHandler(TokenBaseHandler):
         access_token = self.get_argument('access_token')
         refresh_token = self.get_argument('refresh_token')
 
-        tokens_dct = json.loads(base64.decodebytes(access_token).decode())
+        tokens_dct = json.loads(
+            base64.decodebytes(tornado.escape.utf8(access_token)).decode()
+        )
         verifier_hash = nacl.hash.blake2b(tokens_dct['verifier'].encode(),
                                           key=self.hmac_key,
                                           encoder=nacl.encoding.HexEncoder)
