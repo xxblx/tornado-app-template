@@ -78,7 +78,7 @@ class TokenGetHandler(TokenBaseHandler):
             return
 
         user_tokens = yield self.generate_token(username)
-        self.write(**user_tokens)
+        self.write(user_tokens)
 
 
 class TokenRenewHandler(TokenBaseHandler):
@@ -109,4 +109,4 @@ class TokenRenewHandler(TokenBaseHandler):
             return
 
         user_tokens = yield self.generate_token(user_dct['username'])
-        self.write(**user_tokens)
+        self.write(user_tokens)
