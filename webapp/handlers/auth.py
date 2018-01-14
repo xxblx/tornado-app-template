@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import json
 import base64
 from time import mktime
 from datetime import datetime
@@ -30,32 +29,32 @@ class TokenAuthHandler(BaseHandler):
     def prepare(self):
         now = mktime(datetime.now().utctimetuple())
 
-        if not self.get_arguments('access_token'):
+        if not self.get_arguments('select_token'):
+            self.current_user = None
+            return
+        elif not self.get_arguments('verify_token'):
             self.current_user = None
             return
 
-        access_token = self.get_argument('access_token')
-
-        tokens_dct = json.loads(
-            base64.decodebytes(tornado.escape.utf8(access_token)).decode()
-        )
+        select_token = self.get_argument('select_token')
+        verify_token = self.get_argument('verify_token')
 
         # Get user's data from db
         user_dct = yield self.db.users.aggregate([
             {'$match': {
-                'access_tokens.selector': {'$eq': tokens_dct['selector']}
+                'access_tokens.select_token': {'$eq': select_token}
             }},
             {'$unwind': '$access_tokens'},
             {'$match': {
-                'access_tokens.selector': {'$eq': tokens_dct['selector']}
+                'access_tokens.select_token': {'$eq': select_token}
             }},
             {'$project': {
                 'username': 1,
                 'pubkey_hex': 1,
-                'verifier': '$access_tokens.verifier',
+                'verify_token': '$access_tokens.verify_token',
                 'expires_in': '$access_tokens.expires_in'
             }}
-        ]).to_list()
+        ]).to_list(1)
 
         # Selector not found
         if not user_dct:
@@ -73,23 +72,24 @@ class TokenAuthHandler(BaseHandler):
         pubkey = nacl.signing.VerifyKey(user_dct['pubkey_hex'],
                                         encoder=nacl.encoding.HexEncoder)
         try:
-            verifier = pubkey.verify(tokens_dct['verifier'].encode())
+            verify_token = pubkey.verify(
+                base64.decodebytes(tornado.escape.utf8(verify_token))
+            )
         except nacl.exceptions.BadSignatureError:
             self.current_user = None
             return
 
         # Verifier's hash check
-        verifier_hash = nacl.hash.blake2b(verifier,
-                                          key=self.hmac_key,
-                                          encoder=nacl.encoding.HexEncoder)
+        verify_hash = nacl.hash.blake2b(verify_token, key=self.hmac_key,
+                                        encoder=nacl.encoding.HexEncoder)
 
-        if not compare_digest(verifier_hash, user_dct['verifier']):
+        if not compare_digest(verify_hash, user_dct['verify_token']):
             self.current_user = None
             return
 
         self.current_user = {
             'username': user_dct['username'],
-            'access_token': access_token
+            'select_token': select_token
         }
 
 

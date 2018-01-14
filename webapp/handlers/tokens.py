@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 
-import json
-import base64
 from uuid import uuid4
 from time import mktime
+from hmac import compare_digest
 from datetime import datetime, timedelta
 
 import nacl.hash
@@ -23,34 +22,28 @@ class TokenBaseHandler(BaseHandler):
 
         # Token split in two parts: selector and verifier
         # Selector stores as is in db, but verifier stores as hash
-        selector = uuid4().hex
-        verifier = uuid4().hex
-        verifier_hash = nacl.hash.blake2b(verifier.encode(), key=self.hmac_key,
-                                          encoder=nacl.encoding.HexEncoder)
+        select_token = uuid4().hex
+        verify_token = uuid4().hex
+        refresh_token = uuid4().hex
+        verify_token_hash = nacl.hash.blake2b(verify_token.encode(),
+                                              key=self.hmac_key,
+                                              encoder=nacl.encoding.HexEncoder)
         expires_in = datetime.now() + timedelta(hours=2)
         expires_in = mktime(expires_in.utctimetuple())
 
-        tokens_dct = {'selector': selector, 'verifier': verifier}
-        access_token = base64.encodebytes(json.dumps(tokens_dct).encode())
-        refresh_token = uuid4().hex
-
         # Store token in db
-        tokens_dct_db = {
-            'selector': selector,
-            'verifier': verifier_hash,
-            'refresh': refresh_token,
+        tokens_dct = {
+            'select_token': select_token,
+            'verify_token': verify_token_hash,
+            'refresh_token': refresh_token,
             'expires_in': expires_in,
         }
         yield self.db.users.update({'username': username},
-                                   {'$push': {'access_tokens': tokens_dct_db}})
+                                   {'$push': {'access_tokens': tokens_dct}})
 
-        user_tokens = {
-            'access_token': access_token.decode(),
-            'refresh_token': refresh_token,
-            'expires_in': expires_in
-        }
-
-        return user_tokens
+        # Send to user verify token as is
+        tokens_dct['verify_token'] = verify_token
+        return tokens_dct
 
 
 class TokenGetHandler(TokenBaseHandler):
@@ -66,13 +59,14 @@ class TokenGetHandler(TokenBaseHandler):
             self.finish()
             return
 
-        password_check = yield self.executor.submit(
-            nacl.pwhash.verify,
-            user_dct['password_hash'],
-            tornado.escape.utf8(password)
-        )
-
-        if not password_check:
+        # Password verify
+        try:
+            yield self.executor.submit(
+                nacl.pwhash.verify,
+                user_dct['password_hash'],
+                tornado.escape.utf8(password)
+            )
+        except nacl.exceptions.InvalidkeyError:
             self.set_status(403)
             self.finish()
             return
@@ -85,28 +79,45 @@ class TokenRenewHandler(TokenBaseHandler):
 
     @tornado.gen.coroutine
     def post(self):
-        access_token = self.get_argument('access_token')
+        select_token = self.get_argument('select_token')
+        verify_token = self.get_argument('verify_token')
         refresh_token = self.get_argument('refresh_token')
 
-        tokens_dct = json.loads(
-            base64.decodebytes(tornado.escape.utf8(access_token)).decode()
-        )
-        verifier_hash = nacl.hash.blake2b(tokens_dct['verifier'].encode(),
-                                          key=self.hmac_key,
-                                          encoder=nacl.encoding.HexEncoder)
-
         # Looking for tokens in db
-        query = {
-            'access_tokens.refresh': {'$eq': refresh_token},
-            'access_tokens.selector': {'$eq': tokens_dct['selector']},
-            'access_tokens.verifier': {'$eq': verifier_hash},
-        }
-        user_dct = yield self.db.users.find_one(query)
+        user_dct = yield self.db.users.aggregate([
+            {'$match': {
+                'access_tokens.select_token': {'$eq': select_token},
+                'access_tokens.refresh_token': {'$eq': refresh_token}
+            }},
+            {'$unwind': '$access_tokens'},
+            {'$match': {
+                'access_tokens.select_token': {'$eq': select_token},
+                'access_tokens.refresh_token': {'$eq': refresh_token}
+            }},
+            {'$project': {
+                'username': 1,
+                'verify_token': '$access_tokens.verify_token',
+            }}
+        ]).to_list(1)
 
-        if user_dct is None:
+        if not user_dct:
+            self.set_status(403)
+            self.finish()
+            return
+        else:
+            user_dct = user_dct[0]
+
+        # TODO: sign check
+        verify_hash = nacl.hash.blake2b(tornado.escape.utf8(verify_token),
+                                        key=self.hmac_key,
+                                        encoder=nacl.encoding.HexEncoder)
+
+        # Verifier's hash check
+        if not compare_digest(verify_hash, user_dct['verify_token']):
             self.set_status(403)
             self.finish()
             return
 
         user_tokens = yield self.generate_token(user_dct['username'])
+        # TODO: remove old tokens from db
         self.write(user_tokens)
