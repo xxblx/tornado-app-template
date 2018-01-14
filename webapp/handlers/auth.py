@@ -29,7 +29,13 @@ class TokenAuthHandler(BaseHandler):
     @tornado.gen.coroutine
     def prepare(self):
         now = mktime(datetime.now().utctimetuple())
+
+        if not self.get_arguments('access_token'):
+            self.current_user = None
+            return
+
         access_token = self.get_argument('access_token')
+
         tokens_dct = json.loads(
             base64.decodebytes(tornado.escape.utf8(access_token)).decode()
         )
@@ -98,7 +104,7 @@ class SignupHandler(BaseHandler):
 
         # Check does user already have account
         user_dct = yield self.db.users.find_one({'username': username})
-        if user_dct is None:
+        if user_dct is not None:
             self.set_status(403)
             self.finish()
             return

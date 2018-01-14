@@ -2,11 +2,10 @@
 
 import tornado.web
 
-from .base import BaseHandler
 from .auth import TokenAuthHandler
 
 
-class TestApiHandler(BaseHandler, TokenAuthHandler):
+class TestApiHandler(TokenAuthHandler):
     @tornado.web.authenticated
     def post(self):
-        self.write('ok')
+        self.set_status(200)
