@@ -4,14 +4,14 @@
 import tornado.httpserver
 import tornado.ioloop
 
-from webapp.conf import PORT
+from webapp.conf import HOST, PORT
 from webapp.app import Application
 
 
 def main():
 
     http_server = tornado.httpserver.HTTPServer(Application())
-    http_server.listen(PORT)
+    http_server.listen(PORT, HOST)
 
     tornado.ioloop.IOLoop.current().start()
 
