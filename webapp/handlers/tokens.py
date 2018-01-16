@@ -130,6 +130,12 @@ class TokenRenewHandler(TokenBaseHandler):
             self.finish()
             return
 
+        # Remove old tokens from db
+        yield self.db.users.update(
+            {'username': user_dct['username']},
+            {'$pull': {'access_tokens': {'select_token': select_token}}}
+        )
+
+        # Generate the new and send it to user
         user_tokens = yield self.generate_token(user_dct['username'])
-        # TODO: remove old tokens from db
         self.write(user_tokens)
