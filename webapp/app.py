@@ -6,8 +6,8 @@ import nacl.utils
 import tornado.web
 from motor import MotorClient
 
-from .handlers.auth import SignupHandler
 from .handlers.testapi import TestApiHandler
+from .handlers.auth import SignupHandler, GetKeyHandler
 from .handlers.tokens import TokenGetHandler, TokenRenewHandler
 
 from .conf import (MONGODB_HOST, MONGODB_DBNAME,
@@ -22,6 +22,7 @@ class Application(tornado.web.Application):
             (r'/api/signup', SignupHandler),
             (r'/api/token/get', TokenGetHandler),
             (r'/api/token/renew', TokenRenewHandler),
+            (r'/api/key/get', GetKeyHandler),
             (r'/api/test', TestApiHandler)
         ]
 

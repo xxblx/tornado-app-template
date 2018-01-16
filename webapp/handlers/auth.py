@@ -121,3 +121,31 @@ class SignupHandler(BaseHandler):
         }
         yield self.db.users.insert(user_dct)
         self.set_status(200)
+
+
+class GetKeyHandler(BaseHandler):
+
+    @tornado.gen.coroutine
+    def post(self):
+        username = self.get_argument('username')
+        password = self.get_argument('password')
+
+        user_dct = yield self.db.users.find_one({'username': username})
+        if user_dct is None:
+            self.set_status(403)
+            self.finish()
+            return
+
+        # Password verify
+        try:
+            yield self.executor.submit(
+                nacl.pwhash.verify,
+                user_dct['password_hash'],
+                tornado.escape.utf8(password)
+            )
+        except nacl.exceptions.InvalidkeyError:
+            self.set_status(403)
+            self.finish()
+            return
+
+        self.write({'privkey': user_dct['privkey']})
