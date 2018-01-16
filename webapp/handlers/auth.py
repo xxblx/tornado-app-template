@@ -29,15 +29,12 @@ class TokenAuthHandler(BaseHandler):
     def prepare(self):
         now = mktime(datetime.now().utctimetuple())
 
-        if not self.get_arguments('select_token'):
+        try:
+            select_token = self.get_argument('select_token')
+            verify_token = self.get_argument('verify_token')
+        except tornado.web.MissingArgumentError:
             self.current_user = None
             return
-        elif not self.get_arguments('verify_token'):
-            self.current_user = None
-            return
-
-        select_token = self.get_argument('select_token')
-        verify_token = self.get_argument('verify_token')
 
         # Get user's data from db
         user_dct = yield self.db.users.aggregate([
@@ -98,14 +95,19 @@ class SignupHandler(BaseHandler):
     @tornado.gen.coroutine
     def post(self):
 
-        username = self.get_argument('username')
-        password = self.get_argument('password')
-        pubkey_hex = self.get_argument('pubkey_hex')
+        try:
+            username = self.get_argument('username')
+            password = self.get_argument('password')
+            pubkey_hex = self.get_argument('pubkey_hex')
+        except tornado.web.MissingArgumentError:
+            self.set_status(400)
+            self.finish()
+            return
 
         # Check does user already have account
         user_dct = yield self.db.users.find_one({'username': username})
         if user_dct is not None:
-            self.set_status(403)
+            self.set_status(400)
             self.finish()
             return
 
