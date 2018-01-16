@@ -34,6 +34,8 @@ class TokenAuthHandler(BaseHandler):
             verify_token = self.get_argument('verify_token')
         except tornado.web.MissingArgumentError:
             self.current_user = None
+            self.set_status(400)
+            self.finish()
             return
 
         # Get user's data from db
