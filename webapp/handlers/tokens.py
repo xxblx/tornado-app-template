@@ -50,14 +50,8 @@ class TokenGetHandler(TokenBaseHandler):
 
     @tornado.gen.coroutine
     def post(self):
-
-        try:
-            username = self.get_argument('username')
-            password = self.get_argument('password')
-        except tornado.web.MissingArgumentError:
-            self.set_status(400)
-            self.finish()
-            return
+        username = self.get_argument('username')
+        password = self.get_argument('password')
 
         user_dct = yield self.db.users.find_one({'username': username})
         if user_dct is None:
@@ -85,14 +79,9 @@ class TokenRenewHandler(TokenBaseHandler):
 
     @tornado.gen.coroutine
     def post(self):
-        try:
-            select_token = self.get_argument('select_token')
-            verify_token = self.get_argument('verify_token')
-            refresh_token = self.get_argument('refresh_token')
-        except tornado.web.MissingArgumentError:
-            self.set_status(400)
-            self.finish()
-            return
+        select_token = self.get_argument('select_token')
+        verify_token = self.get_argument('verify_token')
+        refresh_token = self.get_argument('refresh_token')
 
         # Looking for tokens in db
         user_dct = yield self.db.users.aggregate([

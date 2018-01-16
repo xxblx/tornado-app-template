@@ -94,15 +94,9 @@ class SignupHandler(BaseHandler):
 
     @tornado.gen.coroutine
     def post(self):
-
-        try:
-            username = self.get_argument('username')
-            password = self.get_argument('password')
-            pubkey_hex = self.get_argument('pubkey_hex')
-        except tornado.web.MissingArgumentError:
-            self.set_status(400)
-            self.finish()
-            return
+        username = self.get_argument('username')
+        password = self.get_argument('password')
+        pubkey_hex = self.get_argument('pubkey_hex')
 
         # Check does user already have account
         user_dct = yield self.db.users.find_one({'username': username})
