@@ -98,6 +98,7 @@ class SignupHandler(BaseHandler):
     def post(self):
         username = self.get_argument('username')
         password = self.get_argument('password')
+        privkey = self.get_argument('privkey')
         pubkey_hex = self.get_argument('pubkey_hex')
 
         # Check does user already have account
@@ -115,6 +116,7 @@ class SignupHandler(BaseHandler):
         user_dct = {
             'username': username,
             'password_hash': password_hash,
+            'privkey': tornado.escape.utf8(privkey),
             'pubkey_hex': tornado.escape.utf8(pubkey_hex)
         }
         yield self.db.users.insert(user_dct)
