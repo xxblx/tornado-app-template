@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import base64
 from uuid import uuid4
 from time import mktime
 from hmac import compare_digest
@@ -96,6 +97,7 @@ class TokenRenewHandler(TokenBaseHandler):
             }},
             {'$project': {
                 'username': 1,
+                'pubkey_hex': 1,
                 'verify_token': '$access_tokens.verify_token',
             }}
         ]).to_list(1)
@@ -107,9 +109,19 @@ class TokenRenewHandler(TokenBaseHandler):
         else:
             user_dct = user_dct[0]
 
-        # TODO: sign check
-        verify_hash = nacl.hash.blake2b(tornado.escape.utf8(verify_token),
-                                        key=self.hmac_key,
+        # Signature check
+        pubkey = nacl.signing.VerifyKey(user_dct['pubkey_hex'],
+                                        encoder=nacl.encoding.HexEncoder)
+        try:
+            verify_token = pubkey.verify(
+                base64.decodebytes(tornado.escape.utf8(verify_token))
+            )
+        except nacl.exceptions.BadSignatureError:
+            self.set_status(403)
+            self.finish()
+            return
+
+        verify_hash = nacl.hash.blake2b(verify_token, key=self.hmac_key,
                                         encoder=nacl.encoding.HexEncoder)
 
         # Verifier's hash check
