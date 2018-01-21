@@ -1,14 +1,16 @@
 
 This is a template for Tornado web application with token-based auth. 
 
-* Python3
+* Python
 * [Tornado](https://github.com/tornadoweb/tornado)
 * [PyNaCl](https://github.com/pyca/pynacl/) - python binding to libsodium
 * [Motor](https://github.com/mongodb/motor/) - async python driver for MongoDB
 
+Tested with Python 3.6.3, Tornado 4.5.3, PyNaCl 1.2.1, Motor 1.2.0.
+
 # How it works
 ## Signup
-Send to server:
+Send to server
 * username
 * password
 * encrypted signing key (private key) bytes
