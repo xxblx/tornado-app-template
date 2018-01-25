@@ -10,8 +10,7 @@ from .handlers.testapi import TestApiHandler
 from .handlers.auth import SignupHandler, GetKeyHandler
 from .handlers.tokens import TokenGetHandler, TokenRenewHandler
 
-from .conf import (MONGODB_HOST, MONGODB_DBNAME,
-                   APP_SECRETKEY_SIZE, WORKERS)
+from .conf import (DBHOST, DBNAME, WORKERS, DEBUG)
 
 
 class Application(tornado.web.Application):
@@ -26,18 +25,18 @@ class Application(tornado.web.Application):
             (r'/api/test', TestApiHandler)
         ]
 
-        settings = dict(
-            login_url='/login',
-            debug=True
-        )
+        settings = {
+            'login_url': '/login',
+            'debug': DEBUG
+        }
 
         super(Application, self).__init__(handlers, **settings)
 
         # MongoDB
-        self.db = MotorClient(**MONGODB_HOST)[MONGODB_DBNAME]
+        self.db = MotorClient(**DBHOST)[DBNAME]
 
         # ThreadPoolExecutor for long tasks like password hashing
         self.executor = ThreadPoolExecutor(WORKERS)
 
         # Secret key for HMAC
-        self.hmac_key = nacl.utils.random(size=APP_SECRETKEY_SIZE)
+        self.hmac_key = nacl.utils.random(size=64)
