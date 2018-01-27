@@ -12,8 +12,8 @@ import nacl.encoding
 
 import tornado.gen
 
-from .base import BaseHandler
-from ..conf import TOKEN_EXPIRES_IN
+from ..base import BaseHandler
+from ...conf import TOKEN_EXPIRES_IN
 
 
 class TokenBaseHandler(BaseHandler):

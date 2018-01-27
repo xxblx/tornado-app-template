@@ -6,9 +6,9 @@ import nacl.utils
 import tornado.web
 from motor import MotorClient
 
-from .handlers.testapi import TestApiHandler
-from .handlers.auth import SignupHandler, GetKeyHandler
-from .handlers.tokens import TokenGetHandler, TokenRenewHandler
+from .handlers.api.testapi import TestApiHandler
+from .handlers.api.auth import SignupHandler, GetKeyHandler
+from .handlers.api.tokens import TokenGetHandler, TokenRenewHandler
 
 from .conf import (DBHOST, DBNAME, WORKERS, DEBUG)
 
