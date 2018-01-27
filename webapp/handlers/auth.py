@@ -34,9 +34,7 @@ class TokenAuthHandler(BaseHandler):
             verify_token = self.get_argument('verify_token')
         except tornado.web.MissingArgumentError:
             self.current_user = None
-            self.set_status(400)
-            self.finish()
-            return
+            raise tornado.web.HTTPError(400)
 
         # Get user's data from db
         user_dct = yield self.db.users.aggregate([
@@ -109,9 +107,7 @@ class SignupHandler(BaseHandler):
         # Check does user already have account
         user_dct = yield self.db.users.find_one({'username': username})
         if user_dct is not None:
-            self.set_status(400)
-            self.finish()
-            return
+            raise tornado.web.HTTPError(400)
 
         password_hash = yield self.executor.submit(
             nacl.pwhash.str,
@@ -128,7 +124,6 @@ class SignupHandler(BaseHandler):
             'privkey_memlimit': privkey_memlimit
         }
         yield self.db.users.insert(user_dct)
-        self.set_status(200)
 
 
 class GetKeyHandler(BaseHandler):
@@ -140,9 +135,7 @@ class GetKeyHandler(BaseHandler):
 
         user_dct = yield self.db.users.find_one({'username': username})
         if user_dct is None:
-            self.set_status(403)
-            self.finish()
-            return
+            raise tornado.web.HTTPError(403, 'invalid username')
 
         # Password verify
         try:
@@ -152,8 +145,6 @@ class GetKeyHandler(BaseHandler):
                 tornado.escape.utf8(password)
             )
         except nacl.exceptions.InvalidkeyError:
-            self.set_status(403)
-            self.finish()
-            return
+            raise tornado.web.HTTPError(403, 'invalid password')
 
         self.write({'privkey': user_dct['privkey']})

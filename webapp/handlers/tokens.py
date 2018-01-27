@@ -56,9 +56,7 @@ class TokenGetHandler(TokenBaseHandler):
 
         user_dct = yield self.db.users.find_one({'username': username})
         if user_dct is None:
-            self.set_status(403)
-            self.finish()
-            return
+            raise tornado.web.HTTPError(403, 'invalid username')
 
         # Password verify
         try:
@@ -68,9 +66,7 @@ class TokenGetHandler(TokenBaseHandler):
                 tornado.escape.utf8(password)
             )
         except nacl.exceptions.InvalidkeyError:
-            self.set_status(403)
-            self.finish()
-            return
+            raise tornado.web.HTTPError(403, 'invalid password')
 
         user_tokens = yield self.generate_token(username)
         self.write(user_tokens)
@@ -103,9 +99,7 @@ class TokenRenewHandler(TokenBaseHandler):
         ]).to_list(1)
 
         if not user_dct:
-            self.set_status(403)
-            self.finish()
-            return
+            raise tornado.web.HTTPError(403, 'invalid username')
         else:
             user_dct = user_dct[0]
 
@@ -117,18 +111,14 @@ class TokenRenewHandler(TokenBaseHandler):
                 base64.decodebytes(tornado.escape.utf8(verify_token))
             )
         except nacl.exceptions.BadSignatureError:
-            self.set_status(403)
-            self.finish()
-            return
+            raise tornado.web.HTTPError(403, 'invalid signature')
 
         verify_hash = nacl.hash.blake2b(verify_token, key=self.hmac_key,
                                         encoder=nacl.encoding.HexEncoder)
 
         # Verifier's hash check
         if not compare_digest(verify_hash, user_dct['verify_token']):
-            self.set_status(403)
-            self.finish()
-            return
+            raise tornado.web.HTTPError(403, 'invalid verify token')
 
         # Remove old tokens from db
         yield self.db.users.update(
