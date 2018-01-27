@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import base64
+import logging
 import os.path
 from functools import wraps
 from urllib.parse import urljoin
@@ -44,11 +45,15 @@ class AppClient:
 
         return self.__signing_key
 
+    def __init__(self):
+        self.logger = logging.getLogger('client')
+        self.logger.setLevel(logging.DEBUG)
+
     def __request(method):
         @wraps(method)
         def wrapper(self, *args, **kwargs):
             r, data = method(self, *args, **kwargs)
-            # TODO: debug log
+            self.logger.debug('%s - %s' % (r, data))
             return r, data
         return wrapper
 
