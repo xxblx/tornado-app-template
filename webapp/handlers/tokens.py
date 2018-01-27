@@ -13,6 +13,7 @@ import nacl.encoding
 import tornado.gen
 
 from .base import BaseHandler
+from ..conf import TOKEN_EXPIRES_IN
 
 
 class TokenBaseHandler(BaseHandler):
@@ -29,7 +30,7 @@ class TokenBaseHandler(BaseHandler):
         verify_token_hash = nacl.hash.blake2b(verify_token.encode(),
                                               key=self.hmac_key,
                                               encoder=nacl.encoding.HexEncoder)
-        expires_in = datetime.now() + timedelta(hours=2)
+        expires_in = datetime.now() + timedelta(seconds=TOKEN_EXPIRES_IN)
         expires_in = mktime(expires_in.utctimetuple())
 
         # Store token in db

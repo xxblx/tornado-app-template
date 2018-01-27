@@ -11,3 +11,6 @@ DBHOST = {
 DBNAME = 'tornado-token-auth'
 
 WORKERS = 32
+
+# Seconds
+TOKEN_EXPIRES_IN = 7200
