@@ -10,7 +10,7 @@ from .handlers.api.testapi import TestApiHandler
 from .handlers.api.auth import SignupHandler, GetKeyHandler
 from .handlers.api.tokens import TokenGetHandler, TokenRenewHandler
 
-from .conf import (DBHOST, DBNAME, WORKERS, DEBUG)
+from .conf import (DBHOST, DBNAME, WORKERS, DEBUG, TOKEN_EXPIRES_TIME)
 
 
 class WebApp(tornado.web.Application):
@@ -31,6 +31,8 @@ class WebApp(tornado.web.Application):
         }
 
         super(WebApp, self).__init__(handlers, **settings)
+
+        self.token_expires_time = TOKEN_EXPIRES_TIME
 
         # MongoDB
         self.db = MotorClient(**DBHOST)[DBNAME]
