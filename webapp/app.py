@@ -3,8 +3,8 @@
 from concurrent.futures import ThreadPoolExecutor
 
 import nacl.utils
+import tornado.web
 from motor import MotorClient
-from tornado.web import Application
 
 from .handlers.testapi import TestApiHandler
 from .handlers.auth import SignupHandler, GetKeyHandler
@@ -13,7 +13,7 @@ from .handlers.tokens import TokenGetHandler, TokenRenewHandler
 from .conf import (DBHOST, DBNAME, WORKERS, DEBUG)
 
 
-class WebApp(Application):
+class WebApp(tornado.web.Application):
 
     def __init__(self):
 
@@ -30,7 +30,7 @@ class WebApp(Application):
             'debug': DEBUG
         }
 
-        super(Application, self).__init__(handlers, **settings)
+        super(WebApp, self).__init__(handlers, **settings)
 
         # MongoDB
         self.db = MotorClient(**DBHOST)[DBNAME]
