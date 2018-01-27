@@ -8,6 +8,7 @@ from functools import wraps
 from urllib.parse import urljoin
 
 import nacl.hash
+import nacl.pwhash
 import nacl.secret
 import nacl.signing
 import nacl.encoding
