@@ -22,14 +22,14 @@ class TokenAuthHandler(BaseHandler):
 
     @tornado.gen.coroutine
     def prepare(self):
+        self.current_user = None
         now = mktime(datetime.now().utctimetuple())
 
         try:
             select_token = self.get_argument('select_token')
             verify_token = self.get_argument('verify_token')
         except tornado.web.MissingArgumentError:
-            self.current_user = None
-            raise tornado.web.HTTPError(400)
+            raise tornado.web.HTTPError(403, 'invalid tokens')
 
         # Get user's data from db
         user_dct = yield self.db.users.aggregate([
@@ -50,15 +50,13 @@ class TokenAuthHandler(BaseHandler):
 
         # Selector not found
         if not user_dct:
-            self.current_user = None
-            return
+            raise tornado.web.HTTPError(403, 'invalid select token')
         else:
             user_dct = user_dct[0]
 
         # Time check
         if now > user_dct['expires_in']:
-            self.current_user = None
-            return
+            raise tornado.web.HTTPError(403, 'expired tokens')
 
         # Signature check
         pubkey = nacl.signing.VerifyKey(user_dct['pubkey_hex'],
@@ -68,16 +66,14 @@ class TokenAuthHandler(BaseHandler):
                 base64.decodebytes(tornado.escape.utf8(verify_token))
             )
         except nacl.exceptions.BadSignatureError:
-            self.current_user = None
-            return
+            raise tornado.web.HTTPError(403, 'invalid signature')
 
         # Verifier's hash check
         verify_hash = nacl.hash.blake2b(verify_token, key=self.hmac_key,
                                         encoder=nacl.encoding.HexEncoder)
 
         if not compare_digest(verify_hash, user_dct['verify_token']):
-            self.current_user = None
-            return
+            raise tornado.web.HTTPError(403, 'invalid verify token')
 
         self.current_user = {
             'username': user_dct['username'],
