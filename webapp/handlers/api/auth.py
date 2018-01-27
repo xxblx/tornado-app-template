@@ -129,13 +129,11 @@ class GetKeyHandler(BaseHandler):
             raise tornado.web.HTTPError(403, 'invalid username')
 
         # Password verify
-        try:
-            yield self.executor.submit(
-                nacl.pwhash.verify,
-                user_dct['password_hash'],
-                tornado.escape.utf8(password)
-            )
-        except nacl.exceptions.InvalidkeyError:
+        passwd_check = yield self.verify_password(
+            user_dct['password_hash'],
+            tornado.escape.utf8(password)
+        )
+        if not passwd_check:
             raise tornado.web.HTTPError(403, 'invalid password')
 
         self.write({'privkey': user_dct['privkey']})
