@@ -12,10 +12,10 @@ import nacl.encoding
 
 import tornado.gen
 
-from ..base import BaseHandler
+from .base import ApiHandler
 
 
-class TokenBaseHandler(BaseHandler):
+class TokenBaseHandler(ApiHandler):
 
     @property
     def expires_time(self):

@@ -27,7 +27,9 @@ class WebApp(tornado.web.Application):
 
         settings = {
             'login_url': '/login',
-            'debug': DEBUG
+            'debug': DEBUG,
+            'xsrf_cookies': True,
+            'cookie_secret': nacl.utils.random(size=64)
         }
 
         super(WebApp, self).__init__(handlers, **settings)

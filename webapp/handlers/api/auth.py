@@ -14,10 +14,10 @@ import nacl.exceptions
 import tornado.gen
 import tornado.web
 
-from ..base import BaseHandler
+from .base import ApiHandler
 
 
-class TokenAuthHandler(BaseHandler):
+class TokenAuthHandler(ApiHandler):
     """ Token based authentication for handlers """
 
     @tornado.gen.coroutine
@@ -81,7 +81,7 @@ class TokenAuthHandler(BaseHandler):
         }
 
 
-class SignupHandler(BaseHandler):
+class SignupHandler(ApiHandler):
 
     @tornado.gen.coroutine
     def post(self):
@@ -117,7 +117,7 @@ class SignupHandler(BaseHandler):
         yield self.db.users.insert(user_dct)
 
 
-class GetKeyHandler(BaseHandler):
+class GetKeyHandler(ApiHandler):
 
     @tornado.gen.coroutine
     def post(self):
