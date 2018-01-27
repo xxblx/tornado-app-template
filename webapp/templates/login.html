@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div>
+    <form action="/login" method="POST">
+        {% raw xsrf_form_html() %}
+        
+        <h2>Login</h2>
+        <div>
+            <label for="username">Username</label>
+            <input type="text" name="username" placeholder="username" required>
+        </div>
+        
+        <div>
+            <label for="passwd">Password</label>
+            <input type="password" name="password" placeholder="password" required>
+        </div>
+        
+        <div>
+            <button type="submit">Enter</button>
+        </div>
+    </form>
+</div>
+{% end %}
+

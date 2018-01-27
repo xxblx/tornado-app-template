@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
 
+import os.path
 from concurrent.futures import ThreadPoolExecutor
 
 import nacl.utils
 import tornado.web
 from motor import MotorClient
+
+from .handlers.testweb import TestWebHandler
+from .handlers.auth import LoginHandler, LogoutHandler
 
 from .handlers.api.testapi import TestApiHandler
 from .handlers.api.auth import SignupHandler, GetKeyHandler
@@ -16,8 +20,10 @@ from .conf import (DBHOST, DBNAME, WORKERS, DEBUG, TOKEN_EXPIRES_TIME)
 class WebApp(tornado.web.Application):
 
     def __init__(self):
-
         handlers = [
+            (r'/', TestWebHandler),
+            (r'/login', LoginHandler),
+            (r'/logout', LogoutHandler),
             (r'/api/signup', SignupHandler),
             (r'/api/token/get', TokenGetHandler),
             (r'/api/token/renew', TokenRenewHandler),
@@ -25,7 +31,9 @@ class WebApp(tornado.web.Application):
             (r'/api/test', TestApiHandler)
         ]
 
+        template_path = os.path.join(os.path.dirname(__file__), 'templates')
         settings = {
+            'template_path': template_path,
             'login_url': '/login',
             'debug': DEBUG,
             'xsrf_cookies': True,
