@@ -1,14 +1,15 @@
 
-This is a template for Tornado web application with token-based auth. 
+Template for [Tornado](https://github.com/tornadoweb/tornado) Web Application. 
 
-* Python
-* [Tornado](https://github.com/tornadoweb/tornado)
-* [PyNaCl](https://github.com/pyca/pynacl/) - python binding to libsodium
-* [Motor](https://github.com/mongodb/motor/) - async python driver for MongoDB
+# Features
+* Cookie-based auth
+* Token-based auth
+* It uses [PyNaCl](https://github.com/pyca/pynacl/) (python binding to libsodium) for encrypting, hashing and signing
+* It uses [Motor](https://github.com/mongodb/motor/) (async python driver for MongoDB)
 
 Tested with Python 3.6.3, Tornado 4.5.3, PyNaCl 1.2.1, Motor 1.2.0.
 
-# How it works
+# API
 ## Signup
 Send to server
 * username
@@ -44,5 +45,5 @@ It can be used for getting new access tokens pair when expires time is over.
 
 See client.py script for example.
 
-You can remove signing keys using from the code if you don't need that and use only access tokens pair in auth process.
+You can remove signing keys using from the code if you don't need that and use only access tokens pairs in auth process.
 
