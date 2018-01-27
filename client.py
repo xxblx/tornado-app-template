@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import time
 import base64
 import logging
 import os.path
@@ -138,9 +139,15 @@ class AppClient:
     @__request
     def renew_token(self, save_tokens=True):
         url = urljoin(self.host_url, '/api/token/renew')
-        data = self.tokens.copy()
-        # FIXME: sign verifier before send
-        del data['expires_in']
+        verify_signed = self.signing_key.sign(
+            self.tokens['verify_token'].encode()
+        )
+        data = {
+            'select_token': self.tokens['select_token'],
+            'verify_token': base64.encodebytes(verify_signed).decode(),
+            'refresh_token': self.tokens['refresh_token']
+        }
+
         r = requests.post(url, data=data)
         if save_tokens:
             self.tokens = r.json()
@@ -161,8 +168,8 @@ class AppClient:
         self.api_test()
 
         # Renew token
-#        time.sleep(2)
-#        self.renew_token()
+        time.sleep(2)
+        self.renew_token()
 
 
 if __name__ == '__main__':
