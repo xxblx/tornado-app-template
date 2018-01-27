@@ -5,7 +5,7 @@ import base64
 import logging
 import os.path
 from functools import wraps
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 
 import nacl.hash
 import nacl.pwhash
@@ -50,11 +50,19 @@ class AppClient:
         self.logger = logging.getLogger('client')
         self.logger.setLevel(logging.DEBUG)
 
+        stream = logging.StreamHandler()
+        formatter = logging.Formatter(
+            '%(asctime)s - %(path)s - %(status_code)d - %(message)s'
+        )
+        stream.setFormatter(formatter)
+        self.logger.addHandler(stream)
+
     def __request(method):
         @wraps(method)
         def wrapper(self, *args, **kwargs):
             r, data = method(self, *args, **kwargs)
-            self.logger.debug('%s - %s' % (r, data))
+            dct = {'status_code': r.status_code, 'path': urlparse(r.url).path}
+            self.logger.debug(data, extra=dct)
             return r, data
         return wrapper
 
