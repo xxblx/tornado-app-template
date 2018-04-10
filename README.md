@@ -32,18 +32,17 @@ Use key derivation.
 ## Tokens
 ### Access tokens pair
 Access token splits into two parts: select\_token and verify\_token. 
-* Select_token saves in db as is. It uses for find queries to DB.
-* Verify\_token doesn't saves in db directly. The webapp creates blake2b hash with secret hmac key from verify\_token and save it to DB. Only the webapp knows the secret hmac key. If someone will be able to read yours DB (with injection for example) he still can only hash without choice to get natural verify_token. 
-* Access tokens pair has some expires time.
+* Select_token is saved in db as is (plain text). It uses for find queries to DB.
+* Verify\_token isn't stored directly the database as plain text. The webapp creates blake2b hash with secret hmac key from verify\_token and save the hash to DB. Only the webapp knows the secret hmac key. So, if someone is be able to read your database (for example - with an injection) he can steal only the hash. The hash is useless without the secret key. 
+* Access tokens pair has an expires time.
 ### Renew token
-It can be used for getting new access tokens pair when expires time is over. 
+It uses for getting the new pair when an expires time is over. 
 
 ## Auth and api access 
-* Get token with yours username and password.
-* When access to api you need sign verify_token with your signing key and the webapp will check signification with yours verify key restored from verify key hex. 
-* If you don't have signing key on current device you can get encrypted signing key bytes with yours username and password, decrypt the bytes and restore signing key.
+* Get token with your username and password.
+* You need sign verify_token with your signing key when access the api and the webapp will check signature with your verify key. 
+* If you don't have signing key on current device you can get encrypted signing key bytes with the username and the password, decrypt the bytes and restore signing key.
 
 See client.py script for example.
 
-You can remove signing keys using from the code if you don't need that and use only access tokens pairs in auth process.
-
+You are able to remove using of the tokens signing from the code if you don't want to use the feature. 
